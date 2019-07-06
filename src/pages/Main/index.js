@@ -10,6 +10,7 @@ export default class Main extends Component {
     newRepo: '',
     repositories: [],
     loading: false,
+    bNotFound: false,
   };
 
   // Load from local storage
@@ -36,25 +37,48 @@ export default class Main extends Component {
     this.setState({ loading: true });
 
     const { newRepo, repositories } = this.state;
-    const response = await api.get(`/repos/${newRepo}`);
 
-    const data = {
-      name: response.data.full_name,
-    };
+    try {
+      repositories.forEach(rep => {
+        if (rep.name === newRepo) {
+          throw new Error('Duplicated Repository');
+        }
+      });
 
-    this.setState({
-      repositories: [...repositories, data],
-      newRepo: '',
-      loading: false,
-    });
+      const response = await api.get(`/repos/${newRepo}`);
+
+      const data = {
+        name: response.data.full_name,
+      };
+
+      this.setState({
+        repositories: [...repositories, data],
+        newRepo: '',
+        loading: false,
+        bNotFound: false,
+      });
+    } catch (error) {
+      await this.setState({
+        loading: false,
+        bNotFound: true,
+      });
+
+      // Select the input field
+      const input = document.getElementById('InputRepository');
+      input.focus();
+      input.select();
+    }
   };
 
   handleInputChange = e => {
-    this.setState({ newRepo: e.target.value });
+    this.setState({
+      newRepo: e.target.value,
+      bNotFound: false,
+    });
   };
 
   render() {
-    const { newRepo, repositories, loading } = this.state;
+    const { newRepo, repositories, loading, bNotFound } = this.state;
 
     return (
       <Container>
@@ -63,15 +87,17 @@ export default class Main extends Component {
           Repositórios
         </h1>
 
-        <Form onSubmit={this.handleSubmit}>
+        <Form onSubmit={this.handleSubmit} bNotFound={bNotFound}>
           <input
+            id="InputRepository"
             type="text"
             placeholder="Adicionar repositório"
             value={newRepo}
+            spellCheck="false"
             onChange={this.handleInputChange}
           />
 
-          <SubmitButton loading={loading}>
+          <SubmitButton loading={loading ? 1 : 0}>
             {loading ? (
               <FaSpinner color="#fff" size={14} />
             ) : (

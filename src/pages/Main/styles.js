@@ -45,7 +45,9 @@ export const Container = styled.div`
 `;
 */
 
-export const Form = styled.form`
+export const Form = styled.form.attrs(props => ({
+  bNotFound: props.bNotFound,
+}))`
   margin-top: 30px;
   display: flex;
   flex-direction: row;
@@ -57,6 +59,14 @@ export const Form = styled.form`
     border-radius: 4px;
     font-size: 16px;
   }
+
+  ${props =>
+    props.bNotFound &&
+    css`
+      input {
+        border: 2px solid #f00;
+      }
+    `}
 `;
 
 const rotate = keyframes`
