@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 export const Loading = styled.div`
   color: #fff;
@@ -37,8 +37,79 @@ export const Owner = styled.header`
 
   a {
     color: #7159c1;
-    font-size: 16px;
     text-decoration: none;
+  }
+`;
+
+export const States = styled.div`
+  padding: 10px 40px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+export const Navigation = styled.div`
+  padding: 5px 40px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+
+  strong {
+    border: 1px solid #eee;
+    font-size: 12px;
+    border-radius: 4px;
+    padding: 3px 5px;
+    margin-left: 5px;
+    margin-right: 5px;
+  }
+`;
+
+export const StateButton = styled.button.attrs(props => ({
+  type: 'button',
+  redrawing: props.redrawing,
+  states: props.states,
+  id: props.id,
+}))`
+  background-color: #4caf50;
+  border: 0;
+  color: white;
+  padding: 5px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  width: 80px;
+  border-radius: 4px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  ${props =>
+    (props.id === props.states || props.redrawing) &&
+    css`
+      cursor: not-allowed;
+      opacity: 0.6;
+    `}
+`;
+
+export const NavButton = styled.button.attrs({
+  type: 'button',
+})`
+  background: #7159c1;
+  border: 0;
+  padding: 5px 10px;
+  border-radius: 4px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  &[disabled] {
+    cursor: not-allowed;
+    opacity: 0.6;
   }
 `;
 
@@ -51,8 +122,8 @@ export const Owner = styled.header`
 */
 
 export const IssueList = styled.ul`
-  padding-top: 30px;
-  margin-top: 30px;
+  padding-top: 15px;
+  margin-top: 15px;
   border-top: 1px solid #eee;
   list-style: none;
 

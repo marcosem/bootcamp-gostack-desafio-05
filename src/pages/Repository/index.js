@@ -1,9 +1,18 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import api from '../../services/api';
 import Container from '../../components/Container';
-import { Loading, Owner, IssueList } from './styles';
+import {
+  Loading,
+  Owner,
+  IssueList,
+  States,
+  StateButton,
+  Navigation,
+  NavButton,
+} from './styles';
 
 export default class Repository extends Component {
   static propTypes = {
@@ -18,10 +27,15 @@ export default class Repository extends Component {
     repository: {},
     issues: [],
     loading: true,
+    states: 'open', // Possible states: all, open, and closed. open is the default
+    redrawing: false,
+    repoName: '',
+    page: 1,
   };
 
   async componentDidMount() {
     const { match } = this.props;
+    const { states, page } = this.state;
 
     const repoName = decodeURIComponent(match.params.repository);
 
@@ -33,8 +47,9 @@ export default class Repository extends Component {
       api.get(`/repos/${repoName}`),
       api.get(`/repos/${repoName}/issues`, {
         params: {
-          state: 'open',
+          state: states, // 'open',
           per_page: 5,
+          page,
         },
       }),
     ]);
@@ -43,11 +58,55 @@ export default class Repository extends Component {
       repository: repository.data,
       issues: issues.data,
       loading: false,
+      repoName,
     });
   }
 
+  reLoadPage = async () => {
+    const { repoName, states, page } = this.state;
+
+    await this.setState({
+      redrawing: true,
+    });
+
+    const issues = await api.get(
+      `/repos/${repoName}/issues?state=${states}&per-page=5&page=${page}`
+    );
+
+    this.setState({
+      issues: issues.data,
+      redrawing: false,
+    });
+  };
+
+  handleStateChange = async e => {
+    const { states } = this.state;
+
+    if (e.target.id === states) {
+      return;
+    }
+
+    await this.setState({
+      states: e.target.id,
+      page: 1,
+    });
+
+    this.reLoadPage();
+  };
+
+  handlePageChange = async action => {
+    const { page } = this.state;
+    const newPage = action === 'next' ? page + 1 : page - 1;
+
+    await this.setState({
+      page: newPage,
+    });
+
+    this.reLoadPage();
+  };
+
   render() {
-    const { repository, issues, loading } = this.state;
+    const { repository, issues, loading, redrawing, states, page } = this.state;
 
     if (loading) {
       return <Loading>Loading...</Loading>;
@@ -61,6 +120,52 @@ export default class Repository extends Component {
           <h1>{repository.name}</h1>
           <p>{repository.description}</p>
         </Owner>
+        <States>
+          <StateButton
+            id="all"
+            onClick={this.handleStateChange}
+            redrawing={redrawing ? 1 : 0}
+            states={states}
+            disabled={states === 'all'}
+          >
+            All
+          </StateButton>
+          <StateButton
+            id="open"
+            onClick={this.handleStateChange}
+            redrawing={redrawing ? 1 : 0}
+            states={states}
+            disabled={states === 'open'}
+          >
+            Opened
+          </StateButton>
+          <StateButton
+            id="closed"
+            onClick={this.handleStateChange}
+            redrawing={redrawing ? 1 : 0}
+            states={states}
+            disabled={states === 'closed'}
+          >
+            Closed
+          </StateButton>
+        </States>
+        <Navigation>
+          <NavButton
+            id="back"
+            onClick={() => this.handlePageChange('back')}
+            disabled={page < 2 || redrawing}
+          >
+            <FaChevronLeft color="#fff" size={10} />
+          </NavButton>
+          <strong>{`Page ${page}`}</strong>
+          <NavButton
+            id="next"
+            onClick={() => this.handlePageChange('next')}
+            disabled={redrawing}
+          >
+            <FaChevronRight color="#fff" size={10} />
+          </NavButton>
+        </Navigation>
         <IssueList>
           {issues.map(issue => (
             <li key={String(issue.id)}>
